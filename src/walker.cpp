@@ -85,10 +85,10 @@ void Walker::LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan) {
     double min_dis = *std::min_element(scan->ranges.begin(), scan->ranges.end());
     double trigger_threshold = 1.5;
     if (min_dis <= trigger_threshold) {
-        double size=scan->ranges.begin() - scan->ranges.end();
+        double size = scan->ranges.end() - scan->ranges.begin() ;
         ROS_INFO_STREAM("Scan length= " << size);
         auto iter = std::find(scan->ranges.begin(), scan->ranges.end(), min_dis);
-        if((scan->ranges.begin() - iter) >= (size/2)) {
+        if((iter - scan->ranges.begin()) >= (size/2)) {
             ROS_INFO_STREAM("Rotating CW");
             rotation_direction_ = 1;  // rotate right for example 
         }
