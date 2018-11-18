@@ -44,6 +44,8 @@ int Walker::msg_rate_ = 1;
  */
 Walker::Walker() {
     pub_ = nh_.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 10);
+    sub_ = nh_.subscribe("/scan", 1000, &Walker::LmsCallbck, this);
+
     velocity_.linear.x = 0;
     velocity_.linear.y = 0;
     velocity_.linear.z = 0;
@@ -73,7 +75,7 @@ geometry_msgs::Twist Walker::Rotate(const double& deg) {
     return velocity_;
 }
 
-int Walker::LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan) {
+void Walker::LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan) {
     //std::vector<double>::iterator iter;
     
     double min_dis = *std::min_element(scan->ranges.begin(), scan->ranges.end());
@@ -84,16 +86,16 @@ int Walker::LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan) {
         auto iter = std::find(scan->ranges.begin(), scan->ranges.end(), min_dis);
         if((scan->ranges.begin() - iter) >= (size/2)) {
             ROS_INFO_STREAM("Rotating CW");
-            return 1;  // rotate right for example 
+            rotation_direction_ = 1;  // rotate right for example 
         }
 
         if((scan->ranges.begin()-iter) < (size/2)) {
             ROS_INFO_STREAM("Rotating CCW");
-            return 2;  // rotate left for exampl
+            rotation_direction_ = 2;  // rotate left for exampl
         }
     }
     ROS_INFO_STREAM("Moving Fwd");
-    return 0; // no rotation
+    rotation_direction_ = 0; // no rotation
 }
 /**
  * @brief      method to publis messages on chatter topic

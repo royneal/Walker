@@ -45,10 +45,12 @@ class Walker {
         void SettxRate(const int& rate);
         geometry_msgs::Twist MoveFwd(const double& fwdvel);
         geometry_msgs::Twist Rotate(const double& deg);
-        int LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan);
+        void LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan);
     private:
         ros::NodeHandle nh_;  // ros handle
         ros::Publisher pub_;  // ros publisher object
+        ros::Subscriber sub_; // ros subscriber object
         static int msg_rate_;
+        int rotation_direction_;
         geometry_msgs::Twist velocity_;
 };
