@@ -77,13 +77,23 @@ int Walker::LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan) {
     //std::vector<double>::iterator iter;
     
     double min_dis = *std::min_element(scan->ranges.begin(), scan->ranges.end());
-    double size=scan->ranges.begin() - scan->ranges.end();
-    ROS_INFO_STREAM("Scan length= " << size);
-   auto iter = std::find(scan->ranges.begin(), scan->ranges.end(), min_dis);
-    if((scan->ranges.begin() - iter) >= (size/2))
-        return 1; //rotate left for example 
-    if((scan->ranges.begin()-iter) < (size/2))
-        return 2; //rotate left for exampl
+    double trigger_threshold = 1.5;
+    if (min_dis <= trigger_threshold) {
+        double size=scan->ranges.begin() - scan->ranges.end();
+        ROS_INFO_STREAM("Scan length= " << size);
+        auto iter = std::find(scan->ranges.begin(), scan->ranges.end(), min_dis);
+        if((scan->ranges.begin() - iter) >= (size/2)) {
+            ROS_INFO_STREAM("Rotating CW");
+            return 1;  // rotate right for example 
+        }
+
+        if((scan->ranges.begin()-iter) < (size/2)) {
+            ROS_INFO_STREAM("Rotating CCW");
+            return 2;  // rotate left for exampl
+        }
+    }
+    ROS_INFO_STREAM("Moving Fwd");
+    return 0; // no rotation
 }
 /**
  * @brief      method to publis messages on chatter topic
