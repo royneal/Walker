@@ -89,12 +89,12 @@ void Walker::LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan) {
         ROS_INFO_STREAM("Scan length= " << size);
         auto iter = std::find(scan->ranges.begin(), scan->ranges.end(), min_dis);
         if((iter - scan->ranges.begin()) >= (size/2)) {
-            ROS_INFO_STREAM("Rotating CW");
+            
             rotation_direction_ = 1;  // rotate right for example 
         }
 
         if((scan->ranges.begin()-iter) < (size/2)) {
-            ROS_INFO_STREAM("Rotating CCW");
+            
             rotation_direction_ = 2;  // rotate left for exampl
         }
     }
@@ -107,17 +107,24 @@ void Walker::LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan) {
  */
 void Walker::Explore(const int& vel) {
     ros::Rate loop_rate(msg_rate_);  // rate at which messages get published
-    pub_.publish(MoveFwd(1));  // publish message to topic
+    pub_.publish(MoveFwd(0.5));  // publish message to topic
 
     while (ros::ok()) {
         ros::Rate loop_rate(msg_rate_);  // rate at which messages get published
-        if( rotation_direction_ == 0)
-            pub_.publish(MoveFwd(1));  // publish message to topic
-        if( rotation_direction_ == 1)
-            pub_.publish(RotCW(30));  // publish message to topic 
-        if( rotation_direction_ == 2)
-            pub_.publish(RotCCW(-30));  // publish message to topic 
-        
+        if( rotation_direction_ == 0) 
+            pub_.publish(MoveFwd(0.5));  // publish message to topic
+
+        if( rotation_direction_ == 1) {
+            ROS_INFO_STREAM("Rotating CW");
+            pub_.publish(MoveFwd(0));  // publish message to topic
+            pub_.publish(RotCW(60));  // publish message to topic 
+        }
+
+        if( rotation_direction_ == 2) {
+            ROS_INFO_STREAM("Rotating CCW");
+            pub_.publish(MoveFwd(0));  // publish message to topic
+            pub_.publish(RotCCW(-60));  // publish message to topic 
+        }
         ros::spinOnce();
         loop_rate.sleep();
     }
