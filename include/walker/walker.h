@@ -30,8 +30,11 @@
 
 #include <string>
 #include "ros/ros.h"
-#include "std_msgs/String.h"
+#include <ros/console.h>
+//#include "std_msgs/String.h"
 #include "geometry_msgs/Twist.h"
+#include "sensor_msgs/LaserScan.h"
+
 /**
  * @brief      A class for publishing to a ros topic
  */
@@ -42,6 +45,7 @@ class Walker {
         void SettxRate(const int& rate);
         geometry_msgs::Twist MoveFwd(const double& fwdvel);
         geometry_msgs::Twist Rotate(const double& deg);
+        void LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan);
     private:
         ros::NodeHandle nh_;  // ros handle
         ros::Publisher pub_;  // ros publisher object
