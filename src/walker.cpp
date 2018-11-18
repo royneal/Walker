@@ -70,7 +70,11 @@ geometry_msgs::Twist Walker::MoveFwd(const double& fwdvel) {
      
 }
 
-geometry_msgs::Twist Walker::Rotate(const double& deg) {
+geometry_msgs::Twist Walker::RotCW(const double& deg) {
+    velocity_.angular.z = deg;
+    return velocity_;
+}
+geometry_msgs::Twist Walker::RotCCW(const double& deg) {
     velocity_.angular.z = deg;
     return velocity_;
 }
@@ -103,11 +107,17 @@ void Walker::LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan) {
  */
 void Walker::Explore(const int& vel) {
     ros::Rate loop_rate(msg_rate_);  // rate at which messages get published
-     
+    pub_.publish(MoveFwd(1));  // publish message to topic
+
     while (ros::ok()) {
         ros::Rate loop_rate(msg_rate_);  // rate at which messages get published
-        pub_.publish(MoveFwd(2));  // publish message to topic
-
+        if( rotation_direction_ == 0)
+            pub_.publish(MoveFwd(1));  // publish message to topic
+        if( rotation_direction_ == 1)
+            pub_.publish(RotCW(30));  // publish message to topic 
+        if( rotation_direction_ == 2)
+            pub_.publish(RotCCW(-30));  // publish message to topic 
+        
         ros::spinOnce();
         loop_rate.sleep();
     }

@@ -46,6 +46,9 @@ class Walker {
         geometry_msgs::Twist MoveFwd(const double& fwdvel);
         geometry_msgs::Twist Rotate(const double& deg);
         void LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan);
+        geometry_msgs::Twist RotCW(const double& deg);
+        geometry_msgs::Twist RotCCW(const double& deg);
+        
     private:
         ros::NodeHandle nh_;  // ros handle
         ros::Publisher pub_;  // ros publisher object
