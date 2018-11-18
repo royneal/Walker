@@ -28,6 +28,8 @@
  */
 
 #include <string>
+#include <vector>
+#include <algorithm>
 #include "walker/walker.h"
 #include "geometry_msgs/Twist.h"
 
@@ -71,6 +73,18 @@ geometry_msgs::Twist Walker::Rotate(const double& deg) {
     return velocity_;
 }
 
+int Walker::LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan) {
+    //std::vector<double>::iterator iter;
+    
+    double min_dis = *std::min_element(scan->ranges.begin(), scan->ranges.end());
+    double size=scan->ranges.begin() - scan->ranges.end();
+    ROS_INFO_STREAM("Scan length= " << size);
+   auto iter = std::find(scan->ranges.begin(), scan->ranges.end(), min_dis);
+    if((scan->ranges.begin() - iter) >= (size/2))
+        return 1; //rotate left for example 
+    if((scan->ranges.begin()-iter) < (size/2))
+        return 2; //rotate left for exampl
+}
 /**
  * @brief      method to publis messages on chatter topic
  * @param      msg string to be published on topic
