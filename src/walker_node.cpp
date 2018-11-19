@@ -44,7 +44,6 @@ int main(int argc, char **argv) {
     Walker turtle_bot;  // create a publisher object
     turtle_bot.SettxRate(rate);
 
-    int velocity = 10;  // message to publish
     if (stat == 1) {
       ROS_INFO("Publisher is enabled");
       turtle_bot.Explore();  // publish velocity to turtlebot
