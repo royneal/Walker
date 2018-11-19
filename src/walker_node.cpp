@@ -22,13 +22,12 @@
  * SOFTWARE.
  *
  * @brief DESCRIPTION
- * main node program  that instantiates a publisher and subscirber objects.
+ * main node program  that instantiates a walker object which controls the 
+ * turtle bot and implements obstacle avoidance. 
  *
  */
 #include <string>
 #include "walker/walker.h"
-
-
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "walker_node");
@@ -48,7 +47,7 @@ int main(int argc, char **argv) {
     int velocity = 10;  // message to publish
     if (stat == 1) {
       ROS_INFO("Publisher is enabled");
-      turtle_bot.Explore(velocity);  // publish velocity to turtlebot
+      turtle_bot.Explore();  // publish velocity to turtlebot
     } else {
       ROS_WARN_STREAM("stat = " << stat);
       ROS_WARN("Publisher is disabled");

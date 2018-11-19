@@ -22,30 +22,30 @@
  * SOFTWARE.
  *
  * @brief DESCRIPTION
- * this node is a client that allows changing the publishing rate of
- * the publisher_subscriber_node in this beginner_tutorials package.
+ * this file is the implementation of Class walker, it advertises and suscribes to
+ * the appropriate topics to make the turtle bot move around and avoid obstacles 
  *
  */
-#include<cmath>
+
+#include <cmath>
 #include <string>
 #include <vector>
 #include <algorithm>
 #include "walker/walker.h"
 #include "geometry_msgs/Twist.h"
 
-
 // msg_rate_ is declared as a const in header file
 // it has to be declared again here and initialized
-// before it can be used. 
+// before it can be used.
+int Walker::msg_rate_ = 1;
 
-int Walker::msg_rate_ = 1; 
 /**
- * @brief      default class constructor, advertises the chatter topic
+ * @brief      default class constructor, advertises to velocity topic
  */
 Walker::Walker() {
-    pub_ = nh_.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 10);
+    pub_ = nh_.advertise<geometry_msgs::Twist>
+                    ("/mobile_base/commands/velocity", 10);
     sub_ = nh_.subscribe("/scan", 1000, &Walker::LmsCallbck, this);
-
     velocity_.linear.x = 0;
     velocity_.linear.y = 0;
     velocity_.linear.z = 0;
@@ -63,85 +63,94 @@ void Walker::SettxRate(const int& rate) {
     msg_rate_ = rate;
 }
 
+/**
+ * @brief      sets the message values to move robot forward
+ * @param      fwdvel double sets the direction and velocity
+ * @return     returns a standard gemometry_msgs::Twist message
+ */
 geometry_msgs::Twist Walker::MoveFwd(const double& fwdvel) {
-     velocity_.linear.x = fwdvel;  // velocity command message type 
-     velocity_.angular.z =0;
+     velocity_.linear.x = fwdvel;  // set fwd velocity of robot
+     velocity_.angular.z =0;  // set rotation of robot to zero
      return velocity_;
-     
 }
 
+/**
+ * @brief      sets Twist message variables to rotate clockwise
+ * @param      linear.x  double sets the direction and velocity
+ * @param      angular.z double sets the roatation of robot
+ * @return     returns a standard gemometry_msgs::Twist message
+ */
 geometry_msgs::Twist Walker::RotCW(const double& deg) {
-     velocity_.linear.x = 0.3;  // velocity command message type 
-     velocity_.angular.z = -1;
+     velocity_.linear.x = 0.3;  // set velocity of robot to 0.3
+     velocity_.angular.z = -1;  // set rotation of robot to -1
     return velocity_;
 }
+
+/**
+ * @brief      sets Twist message variables to counter clockwise
+ * @param      linear.x  double sets the direction and velocity
+ * @param      angular.z double sets the roatation of robot
+ * @return     returns a standard gemometry_msgs::Twist message
+ */
 geometry_msgs::Twist Walker::RotCCW(const double& deg) {
-     velocity_.linear.x = 0.3;  // velocity command message type 
-     velocity_.angular.z = 1;
+     velocity_.linear.x = 0.3;  // set velocity of robot to 0.3
+     velocity_.angular.z = 1;  // set rotation of robot to 1
     return velocity_;
 }
 
+/**
+ * @brief      laser callback updates laer readings 
+ * @param      pointer to lser scan data
+ */
 void Walker::LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan) {
-    //std::vector<double>::iterator iter;
-    
-    auto min_dis = std::min_element(scan->ranges.begin(), scan->ranges.end());
-
-    ROS_INFO_STREAM("min_dis " << *min_dis);
-    ROS_INFO_STREAM("min_dis_indx " << (scan->ranges.begin() - min_dis));
-    if(*min_dis != *min_dis)
-    ROS_WARN("min distance is nan");
+    auto min_dis = std::min_element(scan->ranges.begin(),
+                                            scan->ranges.end());
     double trigger_threshold = 3;
     if (*min_dis <= trigger_threshold) {
         ROS_INFO_STREAM("Threshold Triggered");
-        double size = scan->ranges.end() - scan->ranges.begin() ;
-        ROS_INFO_STREAM("Scan length= " << size);
-        auto iter = std::find(scan->ranges.begin(), scan->ranges.end(), *min_dis);
+        double size = scan->ranges.end() - scan->ranges.begin();
+        auto iter = std::find(scan->ranges.begin(),
+                                scan->ranges.end(), *min_dis);
+
         auto location = iter - scan->ranges.begin();
-        ROS_INFO_STREAM("min index= " << location);
-        if((location) >= (size/2)) {
+
+        if ((location) >= (size/2)) {
             ROS_INFO_STREAM("Obstacle On the left");
-            rotation_direction_ = 1;  // rotate right for example 
+            rotation_direction_ = 1;  // rotate right for example
         }
 
-        if((location) < (size/2)) {
+        if ((location) < (size/2)) {
             ROS_INFO_STREAM("Obstacle On the right");
             rotation_direction_ = 2;  // rotate left for exampl
         }
-    } 
-    else { 
-
-    ROS_INFO_STREAM("Moving Fwd");
-    rotation_direction_ = 0; // no rotation
+    } else {
+    rotation_direction_ = 0;  // no rotation
     }
 }
+
 /**
- * @brief      method to publis messages on chatter topic
- * @param      msg string to be published on topic
+ * @brief      implements Obstackle avoidance 
+ *     
  */
-void Walker::Explore(const int& vel) {
+void Walker::Explore() {
     ros::Rate loop_rate(msg_rate_);  // rate at which messages get published
     pub_.publish(MoveFwd(0.2));  // publish message to topic
 
     while (ros::ok()) {
         ros::Rate loop_rate(msg_rate_);  // rate at which messages get published
-        ROS_INFO_STREAM("direction set to: " << rotation_direction_);
-        if( rotation_direction_ == 0) {
+        if (rotation_direction_ == 0) {
             ROS_INFO_STREAM("No Rotation");
             pub_.publish(MoveFwd(0.2));  // publish message to topic
         }
-
-        while( rotation_direction_ == 1) {
+        while (rotation_direction_ == 1) {
             ROS_INFO_STREAM("Rotating CW");
-           // pub_.publish(MoveFwd(0));  // publish message to topic
-            pub_.publish(RotCW(60));  // publish message to topic 
+            pub_.publish(RotCW(60));  // publish message to topic
             ros::spinOnce();
             loop_rate.sleep();
         }
-
-       while( rotation_direction_ == 2) {
+       while (rotation_direction_ == 2) {
             ROS_INFO_STREAM("Rotating CCW");
-           // pub_.publish(MoveFwd(0));  // publish message to topic
-            pub_.publish(RotCCW(-60));  // publish message to topic 
+            pub_.publish(RotCCW(-60));  // publish message to topic
             ros::spinOnce();
             loop_rate.sleep();
         }

@@ -1,5 +1,5 @@
 /**
- * @file    publisher.h
+ * @file    walker.h
  * @author  Royneal Rayess
  * @copyright MIT License (c) 2018 Royneal Rayess
  *
@@ -22,37 +22,38 @@
  * SOFTWARE.
  *
  * @brief DESCRIPTION
- * Class for demonstrating publishing a topic in ROS.
+ * Class for demonstrating obstacle avoidance using turtlebot and gazebo
  *
  */
 
 #pragma once
 
+
+#include <ros/console.h>
 #include <string>
 #include "ros/ros.h"
-#include <ros/console.h>
-//#include "std_msgs/String.h"
 #include "geometry_msgs/Twist.h"
 #include "sensor_msgs/LaserScan.h"
 
+
 /**
- * @brief      A class for publishing to a ros topic
+ * @brief      A class for implementing obstacle  avoidance
  */
 class Walker {
     public:
         Walker();
-        void Explore(const int& vel);
+        void Explore();
         void SettxRate(const int& rate);
+        void LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan);
         geometry_msgs::Twist MoveFwd(const double& fwdvel);
         geometry_msgs::Twist Rotate(const double& deg);
-        void LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan);
         geometry_msgs::Twist RotCW(const double& deg);
         geometry_msgs::Twist RotCCW(const double& deg);
-        
+
     private:
         ros::NodeHandle nh_;  // ros handle
         ros::Publisher pub_;  // ros publisher object
-        ros::Subscriber sub_; // ros subscriber object
+        ros::Subscriber sub_;  // ros subscriber object
         static int msg_rate_;
         int rotation_direction_;
         geometry_msgs::Twist velocity_;
