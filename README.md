@@ -32,6 +32,7 @@ catkin_make
 ## Launching Gazebo and Walker
 ```
 cd ~/catkin_ws
+source devel/setup.bash
 roslaunch walker walker.launch broadcast:=1 rate:=20 record_cmd:=0
 
 ```
