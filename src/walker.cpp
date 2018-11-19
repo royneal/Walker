@@ -26,7 +26,7 @@
  * the publisher_subscriber_node in this beginner_tutorials package.
  *
  */
-
+#include<cmath>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -65,41 +65,54 @@ void Walker::SettxRate(const int& rate) {
 
 geometry_msgs::Twist Walker::MoveFwd(const double& fwdvel) {
      velocity_.linear.x = fwdvel;  // velocity command message type 
-     velocity_.linear.y = fwdvel;
+     velocity_.angular.z =0;
      return velocity_;
      
 }
 
 geometry_msgs::Twist Walker::RotCW(const double& deg) {
-    velocity_.angular.z = deg;
+     velocity_.linear.x = 0.3;  // velocity command message type 
+     velocity_.angular.z = -1;
     return velocity_;
 }
 geometry_msgs::Twist Walker::RotCCW(const double& deg) {
-    velocity_.angular.z = deg;
+     velocity_.linear.x = 0.3;  // velocity command message type 
+     velocity_.angular.z = 1;
     return velocity_;
 }
 
 void Walker::LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan) {
     //std::vector<double>::iterator iter;
     
-    double min_dis = *std::min_element(scan->ranges.begin(), scan->ranges.end());
-    double trigger_threshold = 1.5;
-    if (min_dis <= trigger_threshold) {
+    auto min_dis = std::min_element(scan->ranges.begin(), scan->ranges.end());
+
+    ROS_INFO_STREAM("min_dis " << *min_dis);
+    ROS_INFO_STREAM("min_dis_indx " << (scan->ranges.begin() - min_dis));
+    if(*min_dis != *min_dis)
+    ROS_WARN("min distance is nan");
+    double trigger_threshold = 3;
+    if (*min_dis <= trigger_threshold) {
+        ROS_INFO_STREAM("Threshold Triggered");
         double size = scan->ranges.end() - scan->ranges.begin() ;
         ROS_INFO_STREAM("Scan length= " << size);
-        auto iter = std::find(scan->ranges.begin(), scan->ranges.end(), min_dis);
-        if((iter - scan->ranges.begin()) >= (size/2)) {
-            
+        auto iter = std::find(scan->ranges.begin(), scan->ranges.end(), *min_dis);
+        auto location = iter - scan->ranges.begin();
+        ROS_INFO_STREAM("min index= " << location);
+        if((location) >= (size/2)) {
+            ROS_INFO_STREAM("Obstacle On the left");
             rotation_direction_ = 1;  // rotate right for example 
         }
 
-        if((scan->ranges.begin()-iter) < (size/2)) {
-            
+        if((location) < (size/2)) {
+            ROS_INFO_STREAM("Obstacle On the right");
             rotation_direction_ = 2;  // rotate left for exampl
         }
-    }
+    } 
+    else { 
+
     ROS_INFO_STREAM("Moving Fwd");
     rotation_direction_ = 0; // no rotation
+    }
 }
 /**
  * @brief      method to publis messages on chatter topic
@@ -107,23 +120,30 @@ void Walker::LmsCallbck(const sensor_msgs::LaserScanConstPtr& scan) {
  */
 void Walker::Explore(const int& vel) {
     ros::Rate loop_rate(msg_rate_);  // rate at which messages get published
-    pub_.publish(MoveFwd(0.5));  // publish message to topic
+    pub_.publish(MoveFwd(0.2));  // publish message to topic
 
     while (ros::ok()) {
         ros::Rate loop_rate(msg_rate_);  // rate at which messages get published
-        if( rotation_direction_ == 0) 
-            pub_.publish(MoveFwd(0.5));  // publish message to topic
-
-        if( rotation_direction_ == 1) {
-            ROS_INFO_STREAM("Rotating CW");
-            pub_.publish(MoveFwd(0));  // publish message to topic
-            pub_.publish(RotCW(60));  // publish message to topic 
+        ROS_INFO_STREAM("direction set to: " << rotation_direction_);
+        if( rotation_direction_ == 0) {
+            ROS_INFO_STREAM("No Rotation");
+            pub_.publish(MoveFwd(0.2));  // publish message to topic
         }
 
-        if( rotation_direction_ == 2) {
+        while( rotation_direction_ == 1) {
+            ROS_INFO_STREAM("Rotating CW");
+           // pub_.publish(MoveFwd(0));  // publish message to topic
+            pub_.publish(RotCW(60));  // publish message to topic 
+            ros::spinOnce();
+            loop_rate.sleep();
+        }
+
+       while( rotation_direction_ == 2) {
             ROS_INFO_STREAM("Rotating CCW");
-            pub_.publish(MoveFwd(0));  // publish message to topic
+           // pub_.publish(MoveFwd(0));  // publish message to topic
             pub_.publish(RotCCW(-60));  // publish message to topic 
+            ros::spinOnce();
+            loop_rate.sleep();
         }
         ros::spinOnce();
         loop_rate.sleep();
